@@ -99,9 +99,9 @@ pp.key = function(n,z)
       until pp.params:t(page[n]) == pp.params.tSEPARATOR
       pp.pos = n-1
     elseif t == pp.params.tFILE then
-      fileselect.enter(_path.dust, newfile())
+      fileselect.enter(_path.dust, newfile)
     elseif t == pp.params.tTEXT then
-      textentry.enter(newtext(), pp.params:get(i), "PARAM: "..pp.params:get_name(i))
+      textentry.enter(newtext, pp.params:get(i), "PARAM: "..pp.params:get_name(i))
     elseif t == pp.params.tTRIGGER then
       pp.params:set(i)
       pp.triggered[i] = 2

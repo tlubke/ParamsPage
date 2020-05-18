@@ -2,11 +2,12 @@ local fileselect = require 'fileselect'
 local textentry = require 'textentry'
 
 local pp = {
-  params = params,
+  params = nil,
   pos = 0,
   oldpos = 0,
   group = false,
   alt = false,
+  visible = false,
 }
 
 local page = nil
@@ -46,24 +47,41 @@ local function newtext(txt)
   end
 end
 
-pp.reset = function()
+local function reset()
   page = nil
   pp.pos = 0
   pp.oldpos = 0
   pp.group = false
+  pp.visible = false
 end
 
-pp.init = function()
+local function init()
   if page == nil then build_page() end
   pp.alt = false
   pp.fine = false
   pp.triggered = {}
 end
 
+function pp._open()
+  pp.visible = true
+  print("open", pp.visible)
+  pp.opened()
+end
+
+function pp._close()
+  pp.visible = false
+  print("close", pp.visible)
+  pp.closed()
+end
+
+-- user definable callbacks
+pp.opened = function() end
+pp.closed = function() end
+
 pp.set_params = function(paramset)
-  pp.reset()
+  reset()
   pp.params = paramset
-  pp.init()
+  init()
 end
 
 pp.key = function(n,z)
@@ -75,12 +93,13 @@ pp.key = function(n,z)
   build_page()
   -- EDIT
   if n==2 and z==1 then
-    if pp.alt then
-      --something
-    elseif pp.group==true then
+    if pp.group==true then
       pp.group = false
       build_page()
       pp.pos = pp.oldpos
+    else
+      pp._close()
+      return
     end
   elseif n==3 and z==1 then
     local i = page[pp.pos+1]
@@ -110,7 +129,6 @@ pp.key = function(n,z)
   elseif n==3 and z==0 then
     pp.fine = false
   end
-  pp.redraw()
 end
 
 pp.enc = function(n,d)
@@ -118,7 +136,6 @@ pp.enc = function(n,d)
     if n==2 and pp.alt==false then
       local prev = pp.pos
       pp.pos = util.clamp(pp.pos + d, 0, #page - 1)
-      if pp.pos ~= prev then _menu.redraw() end
     -- jump section
     elseif n==2 and pp.alt==true then
       d = d>0 and 1 or -1
@@ -133,9 +150,7 @@ pp.enc = function(n,d)
     elseif n==3 and pp.params.count > 0 then
       local dx = pp.fine and (d/20) or d
       pp.params:delta(page[pp.pos+1],dx)
-      redraw()
     end
-    redraw()
 end
 
 pp.scroll = function(n)
